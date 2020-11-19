@@ -48,7 +48,7 @@ pub fn start(email: String, password: String, port: u16, interval: u32, courseid
     };
 
     thread::spawn(move || {
-        let timer = Instant::now();
+        let mut timer = Instant::now();
         let interval = Duration::from_secs(interval as u64 * 60);
         let sleep_duration = Duration::from_secs(10);
         let mut s = client.fetch_grading_stats(courseid, assignmentid).unwrap();
@@ -56,7 +56,9 @@ pub fn start(email: String, password: String, port: u16, interval: u32, courseid
 
         loop {
             if timer.elapsed() >= interval {
+                timer = Instant::now();
                 client.refresh_grading_stats(&mut s);
+                stats.lock().unwrap().replace(s.clone());
             } else {
                 thread::sleep(sleep_duration);
             }
